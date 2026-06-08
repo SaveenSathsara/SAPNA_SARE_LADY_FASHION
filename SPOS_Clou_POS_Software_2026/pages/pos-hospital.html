@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital POS - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pos.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="pos-terminal">
+        <!-- Products Panel -->
+        <div class="pos-products-panel">
+          <div class="pos-toolbar" style="background:var(--info-dim); border-bottom-color:var(--info)">
+            <div class="pos-search">
+              <i class="fas fa-search" style="color:var(--info)"></i>
+              <input type="text" id="pos-search-input" placeholder="Search services, lab tests, wards...">
+            </div>
+            <button class="btn btn-info btn-icon" title="Patient Records"><i class="fas fa-notes-medical"></i></button>
+            <button class="btn btn-info btn-icon" title="Appointments"><i class="fas fa-calendar-check"></i></button>
+          </div>
+
+          <!-- Patient Banner -->
+          <div class="rx-card m-16" style="background:rgba(52,152,219,0.05); border-color:rgba(52,152,219,0.2)">
+            <div class="rx-header" style="margin-bottom:0">
+              <i class="fas fa-user-injured text-info" style="font-size:1.5rem"></i>
+              <div>
+                <div class="font-bold">Kamal Perera (PID-9923)</div>
+                <div class="text-sm text-muted">Male, 45 yrs • Dr. S. Silva (OPD)</div>
+              </div>
+              <div class="ml-auto">
+                <button class="btn btn-primary btn-sm" style="background:var(--info)">Switch Patient</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pos-categories" id="pos-categories"></div>
+          <div class="pos-products-grid" id="pos-products-grid"></div>
+        </div>
+
+        <!-- Cart Panel -->
+        <div class="pos-cart-panel" id="pos-cart-panel">
+          <div class="cart-header">
+            <div class="cart-title">
+              <span>Patient Bill</span>
+              <span class="badge badge-info" id="invoice-no">HSP-1000</span>
+            </div>
+          </div>
+
+          <div class="cart-items" id="cart-items"></div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal</span>
+              <span id="cart-subtotal">LKR 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Insurance Co-Pay</span>
+              <span class="text-success">- LKR 0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Patient Payable</span>
+              <span id="cart-total" class="text-info">LKR 0.00</span>
+            </div>
+          </div>
+
+          <div class="pos-payment-section">
+            <div class="payment-methods-row">
+              <button class="payment-method-btn selected" style="--accent-start:var(--info)"><i class="fas fa-money-bill-wave"></i> Cash</button>
+              <button class="payment-method-btn"><i class="fas fa-credit-card"></i> Card</button>
+              <button class="payment-method-btn"><i class="fas fa-umbrella"></i> Insurance</button>
+            </div>
+            <button class="btn-checkout" style="background:var(--info); box-shadow:0 4px 24px rgba(52,152,219,0.3)" id="btn-checkout" onclick="alert('Payment module opened')">Generate Bill <span id="btn-checkout-amt">LKR 0.00</span></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    let engine;
+    let currentCat = 'All';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('pos-hospital', 'Hospital POS');
+      engine = new POSEngine('hospital');
+      engine.onCartUpdate = renderCart;
+      
+      renderCategories();
+      renderProducts();
+      renderCart();
+    });
+
+    function renderCategories() {
+      const cats = engine.getCategories();
+      document.getElementById('pos-categories').innerHTML = cats.map(c => `
+        <button class="cat-tab ${c === currentCat ? 'active' : ''}" style="--accent-start:var(--info)" onclick="selectCategory('${c}')">${c}</button>
+      `).join('');
+    }
+
+    function selectCategory(cat) { currentCat = cat; renderCategories(); renderProducts(cat); }
+
+    function renderProducts(cat = currentCat, search = '') {
+      const prods = engine.getProducts(cat, search);
+      document.getElementById('pos-products-grid').innerHTML = prods.map(p => `
+        <div class="pos-product-item" style="border-color:rgba(52,152,219,0.2)" onclick="addToCart('${p.id}')">
+          <div class="pos-item-icon">${p.icon}</div>
+          <div class="pos-item-name">${p.name}</div>
+          <div class="pos-item-price text-info">${formatCurrency(p.price)}</div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id) {
+      const prod = POSEngine.PRODUCTS.hospital.find(p => p.id === id);
+      if(prod) engine.addItem(prod);
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      document.getElementById('invoice-no').textContent = engine.invoiceNo;
+      
+      if (engine.cart.length === 0) {
+        container.innerHTML = `<div class="cart-empty"><i class="fas fa-hospital cart-empty-icon" style="color:var(--info)"></i><div class="cart-empty-text">No services added to bill.</div></div>`;
+        document.getElementById('btn-checkout').disabled = true;
+      } else {
+        container.innerHTML = engine.cart.map(i => `
+          <div class="cart-item" style="border-left:3px solid var(--info)">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${i.name}</div>
+              <div class="cart-item-price">${formatCurrency(i.price)}</div>
+            </div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty - 1})">-</button>
+              <div class="qty-val">${i.qty}</div>
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty + 1})">+</button>
+            </div>
+            <div class="cart-item-sub text-info">${formatCurrency(i.price * i.qty)}</div>
+            <button class="cart-item-remove" onclick="engine.removeItem('${i.id}')"><i class="fas fa-times"></i></button>
+          </div>
+        `).join('');
+        document.getElementById('btn-checkout').disabled = false;
+      }
+
+      document.getElementById('cart-subtotal').textContent = formatCurrency(engine.subtotal);
+      
+      const totalStr = formatCurrency(engine.total);
+      document.getElementById('cart-total').textContent = totalStr;
+      document.getElementById('btn-checkout-amt').textContent = totalStr;
+    }
+  </script>
+</body>
+</html>

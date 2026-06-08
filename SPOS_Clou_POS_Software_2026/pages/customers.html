@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Customers (CRM)</h1>
+          <p class="page-subtitle">Manage customer profiles, loyalty points, and credit limits</p>
+        </div>
+        <button class="btn btn-primary" onclick="alert('Add Customer Form')"><i class="fas fa-user-plus"></i> New Customer</button>
+      </div>
+
+      <div class="glass-card p-24 mb-24">
+        <div class="filter-bar">
+          <div class="input-group" style="flex:1">
+            <i class="fas fa-search input-icon"></i>
+            <input type="text" class="form-control" placeholder="Search customers...">
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Phone</th>
+                <th>Loyalty Points</th>
+                <th>Credit Limit</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold">Nimal Fernando</td>
+                <td>077-1234567</td>
+                <td><span class="badge badge-primary">150 pts</span></td>
+                <td>LKR 50,000</td>
+                <td><span class="status-active"><i class="fas fa-circle text-xs mr-4"></i> Active</span></td>
+                <td class="text-right">
+                  <button class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i></button>
+                  <button class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="font-bold">Kamal Perera</td>
+                <td>071-9876543</td>
+                <td><span class="badge badge-primary">45 pts</span></td>
+                <td>LKR 10,000</td>
+                <td><span class="status-active"><i class="fas fa-circle text-xs mr-4"></i> Active</span></td>
+                <td class="text-right">
+                  <button class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i></button>
+                  <button class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('customers', 'Customer Management');
+    });
+  </script>
+</body>
+</html>

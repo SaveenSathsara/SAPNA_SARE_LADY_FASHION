@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Reports & Analytics</h1>
+          <p class="page-subtitle">Exportable business intelligence and insights</p>
+        </div>
+      </div>
+
+      <div class="grid grid-3 mb-24">
+        <div class="quick-action-card" onclick="alert('Generating Sales Report PDF...')">
+          <div class="quick-action-icon text-primary" style="background:var(--bg-elevated)"><i class="fas fa-chart-line"></i></div>
+          <div class="quick-action-label">Daily Sales Report</div>
+          <div class="text-xs text-muted">Summary of all transactions</div>
+        </div>
+        <div class="quick-action-card" onclick="alert('Generating Inventory Report...')">
+          <div class="quick-action-icon text-success" style="background:var(--bg-elevated)"><i class="fas fa-boxes"></i></div>
+          <div class="quick-action-label">Stock & Inventory Report</div>
+          <div class="text-xs text-muted">Current stock and valuations</div>
+        </div>
+        <div class="quick-action-card" onclick="alert('Generating Tax Report...')">
+          <div class="quick-action-icon text-warning" style="background:var(--bg-elevated)"><i class="fas fa-file-invoice-dollar"></i></div>
+          <div class="quick-action-label">Tax & VAT Report</div>
+          <div class="text-xs text-muted">For accounting and auditing</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-title">Monthly Revenue</div></div>
+          <canvas id="monthlyChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-title">Payment Methods</div></div>
+          <div class="flex-center" style="height:200px"><canvas id="paymentChart"></canvas></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/charts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('reports', 'Reports');
+      
+      setTimeout(() => {
+        SPOSCharts.drawBar('monthlyChart', {
+          labels: SPOSCharts.monthLabels(6),
+          datasets: [{ data: [120000, 150000, 140000, 180000, 175000, 210000], color: '#4ECDC4' }]
+        });
+
+        SPOSCharts.drawDoughnut('paymentChart', {
+          labels: ['Cash', 'Card', 'Credit', 'QR Pay'],
+          values: [60, 25, 10, 5],
+          colors: ['#6C63FF', '#4ECDC4', '#E74C3C', '#F39C12']
+        });
+      }, 300);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image: 
+        radial-gradient(ellipse at 20% 0%, rgba(108,99,255,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(78,205,196,0.15) 0%, transparent 50%);
+    }
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      text-align: center;
+    }
+    .login-logo {
+      width: 64px; height: 64px;
+      border-radius: var(--radius-lg);
+      background: var(--accent-grad);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1.8rem; color: #fff;
+      margin: 0 auto 20px;
+      box-shadow: var(--shadow-accent);
+    }
+    .login-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+    .login-subtitle { color: var(--text-secondary); margin-bottom: 32px; }
+    .login-form { text-align: left; }
+    .demo-creds {
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: left;
+    }
+    .demo-creds p { margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); }
+    .demo-creds ul { padding-left: 20px; margin: 0; }
+    .demo-creds li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="glass-card login-container animate-fade-in">
+    <div class="login-logo">SP</div>
+    <h1 class="login-title">Welcome Back</h1>
+    <p class="login-subtitle">Sign in to SPOS Cloud POS 2026</p>
+
+    <form class="login-form" id="loginForm">
+      <div class="form-group mb-20">
+        <label class="form-label">Username</label>
+        <div class="input-group">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" class="form-control form-control-lg" id="username" placeholder="Enter username" required>
+        </div>
+      </div>
+      
+      <div class="form-group mb-24">
+        <label class="form-label flex-between">
+          Password
+          <a href="#" style="color:var(--text-accent); text-transform:none; font-weight:500;">Forgot?</a>
+        </label>
+        <div class="input-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" class="form-control form-control-lg has-right-icon" id="password" placeholder="Enter password" required>
+          <i class="fas fa-eye input-icon input-icon-right" style="cursor:pointer" onclick="togglePwd()"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center">
+        Sign In <i class="fas fa-arrow-right ml-8"></i>
+      </button>
+    </form>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/license.js"></script>
+  <script>
+    function togglePwd() {
+      const input = document.getElementById('password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function redirectAfterLogin() {
+      if (window.LicenseManager) {
+        const mods = ['normal', 'pharmacy', 'restaurant', 'hospital', 'pawning', 'distribution'];
+        const allowed = mods.filter(m => LicenseManager.isModuleAllowed(m));
+        if (allowed.length === 1) {
+          window.location.href = `pos-${allowed[0]}.html`;
+          return;
+        }
+        window.location.href = 'pos-selector.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      
+      const res = doLogin(u, p);
+      if (res.success) {
+        redirectAfterLogin();
+      } else {
+        showToast(res.error, 'error');
+      }
+    });
+
+    if (SPOS.user) {
+      redirectAfterLogin();
+    }
+  </script>
+</body>
+</html>

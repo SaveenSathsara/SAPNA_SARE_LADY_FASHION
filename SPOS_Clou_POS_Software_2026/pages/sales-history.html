@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales History - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Sales History</h1>
+          <p class="page-subtitle">View and manage past transactions</p>
+        </div>
+      </div>
+
+      <div class="glass-card p-24 mb-24">
+        <div class="filter-bar">
+          <div class="input-group" style="flex:2">
+            <i class="fas fa-search input-icon"></i>
+            <input type="text" class="form-control" placeholder="Search Invoice No...">
+          </div>
+          <input type="date" class="form-control" style="flex:1">
+          <select class="form-control" style="flex:1">
+            <option>All Modules</option>
+            <option>Normal POS</option>
+            <option>Pharmacy POS</option>
+            <option>Restaurant POS</option>
+          </select>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice No</th>
+                <th>Date / Time</th>
+                <th>Module</th>
+                <th>Cashier</th>
+                <th>Total</th>
+                <th>Method</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sales-table-body">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('sales-history', 'Sales History');
+      renderSales();
+    });
+
+    function renderSales() {
+      const sales = POSEngine.getSales();
+      const tbody = document.getElementById('sales-table-body');
+      
+      if(sales.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center p-24 text-muted">No sales found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = sales.map(s => `
+        <tr>
+          <td class="font-bold text-accent">${s.invoiceNo}</td>
+          <td>${new Date(s.timestamp).toLocaleString()}</td>
+          <td><span class="badge badge-muted" style="text-transform:capitalize">${s.module}</span></td>
+          <td>${s.cashier}</td>
+          <td class="font-bold">${formatCurrency(s.total)}</td>
+          <td><span class="badge badge-primary text-xs" style="text-transform:uppercase">${s.payMethod}</span></td>
+          <td class="text-right">
+            <button class="btn btn-ghost btn-sm" title="View Receipt" onclick="alert('Receipt View Modal')"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-ghost btn-sm" title="Print" onclick="window.print()"><i class="fas fa-print"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

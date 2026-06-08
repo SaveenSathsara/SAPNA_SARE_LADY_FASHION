@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>License - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">License Management</h1>
+          <p class="page-subtitle">View your subscription details and manage system limits</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-24">
+        <div class="glass-card p-24">
+          <h3 class="font-bold mb-16">Current License Information</h3>
+          <div id="license-info">
+            <!-- JS populated -->
+          </div>
+          
+          <div class="mt-24 pt-20 border-top" style="border-top:1px solid var(--border)">
+            <h4 class="font-bold mb-12">Activate New License</h4>
+            <div class="flex gap-12">
+              <input type="text" class="form-control" id="license-input" placeholder="Enter license key (e.g. SPOS-PRO-2026-XY5678)" style="text-transform:uppercase">
+              <button class="btn btn-primary" onclick="activateKey()">Activate</button>
+            </div>
+            <p class="text-xs text-muted mt-8">Note: Demo keys available in code: SPOS-STD-2026-AB1234, SPOS-PRO-2026-XY5678, SPOS-ENT-2026-ZZ9999</p>
+          </div>
+        </div>
+
+        <div class="glass-card p-24">
+          <h3 class="font-bold mb-16">Usage Limits</h3>
+          <div id="usage-limits">
+            <!-- JS populated -->
+          </div>
+        </div>
+      </div>
+
+      <h2 class="font-bold mb-16 mt-24">Available Tiers</h2>
+      <div class="grid grid-4" id="license-tiers">
+        <!-- JS populated -->
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/license.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('license', 'License Management');
+      renderLicense();
+    });
+
+    function renderLicense() {
+      const info = LicenseManager.license;
+      const status = LicenseManager.expiryStatus;
+      
+      let infoHtml = '';
+      if(info) {
+        const dEnd = new Date(info.expiryDate);
+        const dStart = new Date(info.startDate || Date.now() - 30*24*3600*1000); // Mock start if missing
+        const durationDays = Math.round((dEnd - dStart) / (1000 * 3600 * 24));
+        const remDays = Math.round((dEnd - new Date()) / (1000 * 3600 * 24));
+        const allowedMods = LICENSE_TIERS[info.tier]?.modules.map(m => `<span class="badge badge-success text-xs" style="margin-right:4px; margin-bottom:4px; display:inline-block; text-transform:capitalize">${m}</span>`).join('') || '';
+
+        infoHtml = `
+          <div class="flex-between mb-12">
+            <span class="text-muted">Status</span>
+            <span class="badge badge-${status.class}">${status.label} (${remDays > 0 ? remDays + ' Days Left' : 'Expired'})</span>
+          </div>
+          <div class="flex-between mb-12">
+            <span class="text-muted">License Tier</span>
+            <span class="font-bold text-accent">${info.tier}</span>
+          </div>
+          <div class="flex-between mb-12" style="align-items:flex-start">
+            <span class="text-muted" style="white-space:nowrap; margin-right:16px;">Enabled POS Modules</span>
+            <div style="text-align:right">${allowedMods}</div>
+          </div>
+          <div class="flex-between mb-12">
+            <span class="text-muted">Issued To</span>
+            <span class="font-bold">${info.issuedTo}</span>
+          </div>
+          <div class="flex-between mb-12">
+            <span class="text-muted">License Key</span>
+            <span class="font-mono">${info.key}</span>
+          </div>
+          <div class="flex-between mb-12">
+            <span class="text-muted">Validity Period</span>
+            <span class="font-bold">${durationDays} Days (Ends ${dEnd.toLocaleDateString()})</span>
+          </div>
+          <div class="flex-between">
+            <span class="text-muted">Machine ID</span>
+            <span class="font-mono text-sm">${info.machineId}</span>
+          </div>
+          ${info.tier !== 'TRIAL' ? `<button class="btn btn-ghost btn-sm text-danger mt-16" onclick="if(confirm('Deactivate?')) { LicenseManager.deactivate(); renderLicense(); }">Deactivate License</button>` : ''}
+        `;
+      } else {
+        infoHtml = `<div class="text-danger font-bold"><i class="fas fa-exclamation-triangle"></i> No valid license found.</div>`;
+      }
+      document.getElementById('license-info').innerHTML = infoHtml;
+
+      // Usage
+      const usage = LicenseManager.getUsageReport();
+      const uPct = Math.min(100, (usage.currentUsers / usage.maxUsers)*100);
+      const pPct = Math.min(100, (usage.currentProducts / usage.maxProducts)*100);
+      
+      document.getElementById('usage-limits').innerHTML = `
+        <div class="mb-20">
+          <div class="flex-between mb-8 text-sm">
+            <span>User Accounts (${usage.currentUsers} / ${usage.maxUsers})</span>
+            <span>${Math.round(uPct)}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${uPct}%; ${uPct>90?'background:var(--danger)':''}"></div></div>
+        </div>
+        <div>
+          <div class="flex-between mb-8 text-sm">
+            <span>Products & Items (${usage.currentProducts} / ${usage.maxProducts})</span>
+            <span>${Math.round(pPct)}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pPct}%; ${pPct>90?'background:var(--danger)':''}"></div></div>
+        </div>
+      `;
+
+      // Tiers
+      const tiersContainer = document.getElementById('license-tiers');
+      tiersContainer.innerHTML = Object.entries(LICENSE_TIERS).map(([key, t]) => `
+        <div class="license-tier-card ${info?.tier === key ? 'popular' : ''}" style="${info?.tier === key ? 'border-color:var(--accent-start); background:rgba(108,99,255,0.05)' : ''}">
+          <h3 class="font-bold mb-4">${t.name}</h3>
+          <div class="license-features">
+            <div class="license-feature"><i class="fas fa-check"></i> ${t.maxUsers} Users</div>
+            <div class="license-feature"><i class="fas fa-check"></i> ${t.maxProducts === 999999 ? 'Unlimited' : t.maxProducts} Products</div>
+            <div class="license-feature ${t.modules.includes('pharmacy')?'':'disabled'}"><i class="fas ${t.modules.includes('pharmacy')?'fa-check':'fa-times'}"></i> Pharmacy POS</div>
+            <div class="license-feature ${t.modules.includes('restaurant')?'':'disabled'}"><i class="fas ${t.modules.includes('restaurant')?'fa-check':'fa-times'}"></i> Restaurant POS</div>
+            <div class="license-feature ${t.modules.includes('hospital')?'':'disabled'}"><i class="fas ${t.modules.includes('hospital')?'fa-check':'fa-times'}"></i> Hospital POS</div>
+          </div>
+          ${info?.tier === key 
+            ? `<div class="badge badge-primary text-center" style="display:block; padding:10px">Current Plan</div>`
+            : `<button class="btn btn-secondary w-full" style="width:100%" onclick="alert('Contact Sales to Upgrade')">Upgrade</button>`
+          }
+        </div>
+      `).join('');
+    }
+
+    function activateKey() {
+      const key = document.getElementById('license-input').value;
+      if(!key) { showToast('Please enter a key', 'error'); return; }
+      
+      const res = LicenseManager.activate(key);
+      if(res.success) {
+        showToast('License Activated Successfully!', 'success');
+        document.getElementById('license-input').value = '';
+        renderLicense();
+      } else {
+        showToast(res.error, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

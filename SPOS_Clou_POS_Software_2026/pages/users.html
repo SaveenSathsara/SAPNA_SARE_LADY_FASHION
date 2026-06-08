@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">User Management</h1>
+          <p class="page-subtitle">Manage system access, roles, and staff accounts</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-user')"><i class="fas fa-plus"></i> Add New User</button>
+      </div>
+
+      <div class="glass-card p-24 mb-24">
+        <div class="filter-bar">
+          <div class="input-group">
+            <i class="fas fa-search input-icon"></i>
+            <input type="text" class="form-control" placeholder="Search users...">
+          </div>
+          <select class="form-control" style="width:160px">
+            <option>All Roles</option>
+            <option>Administrator</option>
+            <option>Manager</option>
+            <option>Cashier</option>
+          </select>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <div class="modal-overlay" id="modal-add-user">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Create New User</h3>
+        <button class="modal-close" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="addUserForm">
+        <div class="grid grid-2 mb-16">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="u-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" id="u-username" required>
+          </div>
+        </div>
+        <div class="grid grid-2 mb-16">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="u-password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <select class="form-control" id="u-role">
+              <option>Cashier</option>
+              <option>Manager</option>
+              <option>Administrator</option>
+              <option>Pharmacist</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-user')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('users', 'User Management');
+      renderUsers();
+
+      document.getElementById('addUserForm').addEventListener('submit', e => {
+        e.preventDefault();
+        addUser({
+          name: document.getElementById('u-name').value,
+          username: document.getElementById('u-username').value,
+          password: document.getElementById('u-password').value,
+          role: document.getElementById('u-role').value,
+          avatar: document.getElementById('u-name').value.substring(0,2).toUpperCase()
+        });
+        closeModal('modal-add-user');
+        showToast('User created successfully', 'success');
+        e.target.reset();
+        renderUsers();
+      });
+    });
+
+    function renderUsers() {
+      const users = getUsers();
+      document.getElementById('users-table-body').innerHTML = users.map(u => `
+        <tr>
+          <td>
+            <div class="flex" style="gap:12px; align-items:center">
+              <div class="user-table-avatar" style="background:var(--accent-grad)">${u.avatar || 'U'}</div>
+              <div>
+                <div class="font-bold">${u.name}</div>
+                <div class="text-xs text-muted">${u.email || 'N/A'}</div>
+              </div>
+            </div>
+          </td>
+          <td>${u.username}</td>
+          <td><span class="badge badge-muted">${u.role}</span></td>
+          <td><span class="status-${u.active?'active':'inactive'}"><i class="fas fa-circle text-xs mr-4"></i> ${u.active?'Active':'Inactive'}</span></td>
+          <td class="text-right">
+            <button class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-ghost btn-sm text-danger" onclick="delUser(${u.id})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function delUser(id) {
+      if(id === 1) { showToast('Cannot delete primary admin account', 'error'); return; }
+      if(confirm('Delete this user?')) {
+        deleteUser(id);
+        renderUsers();
+        showToast('User deleted', 'success');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS Modules - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    
+    <div id="page-content" class="hidden">
+      <div class="page-header text-center flex-col" style="margin-top:20px; margin-bottom:40px;">
+        <h1 class="page-title" style="font-size:2.2rem">Select POS Module</h1>
+        <p class="page-subtitle" style="font-size:1rem; max-width:600px">Choose the specialized Point of Sale terminal for your business needs. Some modules may require a specific license tier.</p>
+      </div>
+
+      <div class="grid grid-3" style="max-width:1100px; margin:0 auto;" id="module-grid">
+        <!-- Injected via JS -->
+      </div>
+      
+      <div class="text-center mt-24">
+        <p class="text-muted text-sm"><i class="fas fa-info-circle"></i> Locked modules require a license upgrade. <a href="license.html" class="text-accent">View License</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/license.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('pos-selector', 'Select POS Module');
+
+      const grid = document.getElementById('module-grid');
+      const mods = Object.entries(SPOS.modules);
+      
+      let html = '';
+      mods.forEach(([key, mod]) => {
+        const isAllowed = LicenseManager.isModuleAllowed(key);
+        const isActive  = SPOS.activeModule === key;
+        
+        const cardStyle = isActive ? `border-color:${mod.color}; box-shadow:0 0 20px ${mod.color}33;` : '';
+        const bgGrad    = `linear-gradient(135deg, ${mod.color}, ${mod.color}88)`;
+        const lockHtml  = isAllowed ? '' : `<div style="position:absolute;top:15px;right:15px;background:rgba(0,0,0,0.5);padding:5px 10px;border-radius:20px;font-size:0.7rem;color:#F39C12"><i class="fas fa-lock"></i> Locked</div>`;
+        const actionHtml = isAllowed 
+          ? `<button class="btn btn-primary mt-12" style="background:${mod.color}; width:100%; justify-content:center" onclick="launchModule('${key}')">Launch Terminal</button>`
+          : `<button class="btn btn-secondary mt-12" style="width:100%; justify-content:center" onclick="window.location.href='license.html'">Upgrade License</button>`;
+
+        let features = '';
+        if (key==='normal') features = 'Barcode Scanning, Quick Checkout, Receipts';
+        if (key==='pharmacy') features = 'Prescriptions, Expiry Tracking, Batch Mgmt';
+        if (key==='restaurant') features = 'Table Map, KDS, Split Bills, Tips';
+        if (key==='hospital') features = 'OPD, Wards, Doctor Fees, Lab Tests';
+        if (key==='pawning') features = 'Gold Weighing, Interest Calc, Pledges';
+        if (key==='distribution') features = 'Van Sales, Routes, Wholesale, Returns';
+
+        const featureTags = features.split(', ').map(f => `<span class="pos-feature-tag">${f}</span>`).join('');
+
+        html += `
+          <div class="pos-module-card glass-card" style="--card-gradient:${bgGrad}; --card-color:${mod.color}; ${cardStyle} opacity: ${isAllowed?1:0.7}">
+            ${lockHtml}
+            <div class="flex-between">
+              <div class="pos-module-icon" style="background:${mod.color}22; color:${mod.color}">
+                <i class="fas ${mod.icon}"></i>
+              </div>
+              ${isActive ? `<span class="badge" style="background:${mod.color}33; color:${mod.color}">Active</span>` : ''}
+            </div>
+            
+            <div>
+              <div class="pos-module-name">${mod.name}</div>
+              <div class="pos-module-features">${featureTags}</div>
+            </div>
+            
+            <div class="mt-auto">
+              ${actionHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+    });
+
+    function launchModule(key) {
+      switchModule(key);
+    }
+  </script>
+</body>
+</html>

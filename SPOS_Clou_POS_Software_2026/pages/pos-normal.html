@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Normal POS - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pos.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="pos-terminal">
+        <!-- Products Panel -->
+        <div class="pos-products-panel">
+          <div class="pos-toolbar">
+            <div class="pos-search">
+              <i class="fas fa-barcode" style="color:var(--text-muted)"></i>
+              <input type="text" id="pos-search-input" placeholder="Scan barcode or search products...">
+            </div>
+            <button class="btn btn-secondary btn-icon" title="Add Custom Item"><i class="fas fa-plus"></i></button>
+            <button class="btn btn-secondary btn-icon" title="View Held Sales" onclick="openHeldSales()"><i class="fas fa-hand-holding"></i></button>
+          </div>
+
+          <div class="pos-categories" id="pos-categories">
+            <!-- Populated via JS -->
+          </div>
+
+          <div class="pos-products-grid" id="pos-products-grid">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Cart Panel -->
+        <div class="pos-cart-panel" id="pos-cart-panel">
+          <div class="cart-header">
+            <div class="cart-title">
+              <span>Current Sale</span>
+              <span class="badge badge-primary" id="invoice-no">INV-1000</span>
+            </div>
+            <div class="cart-meta">
+              <button class="cart-meta-btn" onclick="selectCustomer()"><i class="fas fa-user"></i> <span id="customer-name">Walk-in Customer</span></button>
+              <button class="cart-meta-btn" onclick="clearCart()"><i class="fas fa-trash-alt text-danger"></i> Clear</button>
+            </div>
+          </div>
+
+          <div class="cart-items" id="cart-items">
+            <!-- Populated via JS -->
+            <div class="cart-empty">
+              <i class="fas fa-shopping-basket cart-empty-icon"></i>
+              <div class="cart-empty-text">Cart is empty.<br>Scan or select items to start.</div>
+            </div>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal (<span id="item-count">0</span> items)</span>
+              <span id="cart-subtotal">LKR 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label text-success">Discount</span>
+              <span class="text-success" id="cart-discount">- LKR 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Tax (18%)</span>
+              <span id="cart-tax">LKR 0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="cart-total">LKR 0.00</span>
+            </div>
+          </div>
+
+          <div class="pos-payment-section">
+            <div class="payment-methods-row" id="payment-methods">
+              <button class="payment-method-btn selected" data-method="cash"><i class="fas fa-money-bill-wave"></i> Cash</button>
+              <button class="payment-method-btn" data-method="card"><i class="fas fa-credit-card"></i> Card</button>
+              <button class="payment-method-btn" data-method="credit"><i class="fas fa-user-clock"></i> Credit</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-secondary" style="flex:1; padding:14px; font-weight:700" onclick="engine.holdSale(); renderCart()">Hold</button>
+              <button class="btn-checkout" style="flex:2" id="btn-checkout" onclick="openCheckoutModal()" disabled>Pay <span id="btn-checkout-amt">LKR 0.00</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal-overlay" id="modal-checkout">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Complete Payment</h3>
+        <button class="modal-close" onclick="closeModal('modal-checkout')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="text-center mb-24">
+        <p class="text-muted mb-8">Amount Due</p>
+        <h1 class="gradient-text" style="font-size:3rem; font-weight:900" id="modal-due-amt">LKR 0.00</h1>
+      </div>
+      <div class="form-group mb-20">
+        <label class="form-label">Tendered Amount</label>
+        <div class="input-group">
+          <i class="fas fa-money-bill input-icon"></i>
+          <input type="number" class="form-control form-control-lg" id="tendered-amt" placeholder="Enter amount received" style="font-size:1.5rem; font-weight:700">
+        </div>
+      </div>
+      <div class="flex-between mb-24" style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border)">
+        <span class="font-semibold text-secondary">Change Due:</span>
+        <span class="font-bold text-success" style="font-size:1.5rem" id="modal-change-amt">LKR 0.00</span>
+      </div>
+      <div class="numpad mb-24">
+        <button class="numpad-key action" onclick="addTender(100)">+100</button>
+        <button class="numpad-key action" onclick="addTender(500)">+500</button>
+        <button class="numpad-key action" onclick="addTender(1000)">+1000</button>
+        <button class="numpad-key action" onclick="addTender(5000)">+5000</button>
+        <button class="numpad-key zero" onclick="exactTender()">Exact Amount</button>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%; justify-content:center" onclick="completeCheckout()">Complete Sale <i class="fas fa-check-circle ml-8"></i></button>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div class="modal-overlay receipt-modal" id="modal-receipt">
+    <div class="modal">
+      <div class="modal-header" style="border:none; margin:0; padding:16px">
+        <h3 class="modal-title">Receipt</h3>
+        <button class="modal-close" onclick="closeReceipt()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="receipt-box" id="receipt-content">
+        <!-- Injected -->
+      </div>
+      <div class="modal-footer" style="padding:16px; margin:0; background:var(--bg-base); border-radius:0 0 var(--radius-xl) var(--radius-xl)">
+        <button class="btn btn-secondary flex-1" onclick="closeReceipt()">New Sale</button>
+        <button class="btn btn-primary flex-1" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    let engine;
+    let currentCat = 'All';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('pos-normal', 'Normal POS');
+      engine = new POSEngine('normal');
+      
+      engine.onCartUpdate = renderCart;
+      
+      renderCategories();
+      renderProducts();
+      renderCart();
+
+      // Search bindings
+      document.getElementById('pos-search-input').addEventListener('input', e => {
+        renderProducts(currentCat, e.target.value);
+      });
+
+      // Payment method selection
+      document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          engine.payMethod = btn.dataset.method;
+        });
+      });
+
+      // Tender amount input
+      document.getElementById('tendered-amt').addEventListener('input', calcChange);
+    });
+
+    function renderCategories() {
+      const cats = engine.getCategories();
+      const container = document.getElementById('pos-categories');
+      container.innerHTML = cats.map(c => `
+        <button class="cat-tab ${c === currentCat ? 'active' : ''}" onclick="selectCategory('${c}')">${c}</button>
+      `).join('');
+    }
+
+    function selectCategory(cat) {
+      currentCat = cat;
+      renderCategories();
+      renderProducts(cat, document.getElementById('pos-search-input').value);
+    }
+
+    function renderProducts(cat = currentCat, search = '') {
+      const prods = engine.getProducts(cat, search);
+      const container = document.getElementById('pos-products-grid');
+      
+      if(prods.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center text-muted p-24">No products found</div>`;
+        return;
+      }
+
+      container.innerHTML = prods.map(p => `
+        <div class="pos-product-item ${p.stock <= 0 ? 'out-of-stock' : ''}" onclick="${p.stock > 0 ? `addToCart('${p.id}')` : ''}">
+          <div class="pos-item-icon">${p.icon}</div>
+          <div class="pos-item-name">${p.name}</div>
+          <div class="pos-item-price">${formatCurrency(p.price)}</div>
+          <div class="pos-item-stock">${p.stock} in stock</div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id) {
+      const prod = POSEngine.PRODUCTS.normal.find(p => p.id === id);
+      if(prod) engine.addItem(prod);
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      
+      document.getElementById('invoice-no').textContent = engine.invoiceNo;
+      
+      if (engine.cart.length === 0) {
+        container.innerHTML = `
+          <div class="cart-empty">
+            <i class="fas fa-shopping-basket cart-empty-icon"></i>
+            <div class="cart-empty-text">Cart is empty.<br>Scan or select items to start.</div>
+          </div>
+        `;
+        document.getElementById('btn-checkout').disabled = true;
+      } else {
+        container.innerHTML = engine.cart.map(i => `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${i.name}</div>
+              <div class="cart-item-price">${formatCurrency(i.price)}</div>
+            </div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty - 1})">-</button>
+              <div class="qty-val">${i.qty}</div>
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty + 1})">+</button>
+            </div>
+            <div class="cart-item-sub">${formatCurrency(i.price * i.qty)}</div>
+            <button class="cart-item-remove" onclick="engine.removeItem('${i.id}')"><i class="fas fa-times"></i></button>
+          </div>
+        `).join('');
+        document.getElementById('btn-checkout').disabled = false;
+      }
+
+      document.getElementById('item-count').textContent = engine.itemCount;
+      document.getElementById('cart-subtotal').textContent = formatCurrency(engine.subtotal);
+      document.getElementById('cart-discount').textContent = `- ${formatCurrency(engine.discountAmount)}`;
+      document.getElementById('cart-tax').textContent = formatCurrency(engine.taxAmount);
+      
+      const totalStr = formatCurrency(engine.total);
+      document.getElementById('cart-total').textContent = totalStr;
+      document.getElementById('btn-checkout-amt').textContent = totalStr;
+    }
+
+    function clearCart() {
+      if(confirm('Are you sure you want to clear the cart?')) {
+        engine.clearCart();
+      }
+    }
+
+    // Checkout Modal Logic
+    function openCheckoutModal() {
+      if(engine.cart.length === 0) return;
+      document.getElementById('modal-due-amt').textContent = formatCurrency(engine.total);
+      document.getElementById('tendered-amt').value = '';
+      document.getElementById('modal-change-amt').textContent = 'LKR 0.00';
+      openModal('modal-checkout');
+      setTimeout(() => document.getElementById('tendered-amt').focus(), 100);
+    }
+
+    function addTender(amt) {
+      const inp = document.getElementById('tendered-amt');
+      inp.value = (parseFloat(inp.value || 0) + amt).toFixed(2);
+      calcChange();
+    }
+
+    function exactTender() {
+      document.getElementById('tendered-amt').value = engine.total.toFixed(2);
+      calcChange();
+    }
+
+    function calcChange() {
+      const t = parseFloat(document.getElementById('tendered-amt').value || 0);
+      const diff = t - engine.total;
+      const el = document.getElementById('modal-change-amt');
+      el.textContent = diff >= 0 ? formatCurrency(diff) : 'LKR 0.00';
+      el.className = diff >= 0 ? 'font-bold text-success' : 'font-bold text-danger';
+    }
+
+    function completeCheckout() {
+      const t = parseFloat(document.getElementById('tendered-amt').value || 0);
+      if (engine.payMethod === 'cash' && t < engine.total) {
+        showToast('Tendered amount is less than total due.', 'error');
+        return;
+      }
+      
+      const sale = engine.checkout(t);
+      if (sale) {
+        closeModal('modal-checkout');
+        showReceipt(sale);
+        showToast('Payment successful!', 'success');
+      }
+    }
+
+    // Receipt Modal Logic
+    function showReceipt(sale) {
+      const d = new Date(sale.timestamp);
+      let html = `
+        <div class="receipt-header">
+          <div class="receipt-shop">SPOS Cloud POS 2026</div>
+          <div>123 Main Street, Colombo</div>
+          <div>Tel: 011-2345678</div>
+        </div>
+        <div class="receipt-row"><span>Date:</span><span>${d.toLocaleDateString()} ${d.toLocaleTimeString()}</span></div>
+        <div class="receipt-row"><span>Invoice:</span><span>${sale.invoiceNo}</span></div>
+        <div class="receipt-row"><span>Cashier:</span><span>${sale.cashier}</span></div>
+        <hr class="receipt-divider">
+      `;
+      
+      sale.items.forEach(i => {
+        html += `
+          <div class="receipt-row"><span>${i.name}</span></div>
+          <div class="receipt-row"><span>${i.qty} x ${i.price.toFixed(2)}</span><span>${(i.qty * i.price).toFixed(2)}</span></div>
+        `;
+      });
+      
+      html += `
+        <hr class="receipt-divider">
+        <div class="receipt-row"><span>Subtotal:</span><span>${sale.subtotal.toFixed(2)}</span></div>
+        <div class="receipt-row"><span>Discount:</span><span>-${sale.discount.toFixed(2)}</span></div>
+        <div class="receipt-row"><span>Tax:</span><span>${sale.tax.toFixed(2)}</span></div>
+        <hr class="receipt-divider">
+        <div class="receipt-row receipt-total"><span>Total:</span><span>${sale.total.toFixed(2)}</span></div>
+        <hr class="receipt-divider">
+        <div class="receipt-row"><span>Pay Method:</span><span style="text-transform:uppercase">${sale.payMethod}</span></div>
+        <div class="receipt-row"><span>Tendered:</span><span>${sale.tendered.toFixed(2)}</span></div>
+        <div class="receipt-row"><span>Change:</span><span>${sale.change.toFixed(2)}</span></div>
+        <div class="receipt-footer">Thank you for your business!<br>Powered by SPOS</div>
+      `;
+      
+      document.getElementById('receipt-content').innerHTML = html;
+      openModal('modal-receipt');
+    }
+
+    function closeReceipt() {
+      closeModal('modal-receipt');
+      renderProducts(); // reset stock display
+    }
+  </script>
+</body>
+</html>

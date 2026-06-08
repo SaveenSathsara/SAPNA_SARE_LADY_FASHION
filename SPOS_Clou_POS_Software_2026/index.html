@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPOS Cloud POS 2026</title>
+  <style>
+    body {
+      background: #07071A;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 5px solid rgba(108,99,255,0.2);
+      border-bottom-color: #6C63FF;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    h2 { margin: 0; font-weight: 600; letter-spacing: -0.5px; }
+    p { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="loader"></div>
+  <h2>SPOS Cloud POS 2026</h2>
+  <p>Initializing system...</p>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/license.js"></script>
+  <script>
+    setTimeout(() => {
+      if (!LicenseManager.isValid) {
+        window.location.href = 'pages/license.html';
+      } else if (!SPOS.user) {
+        window.location.href = 'pages/login.html';
+      } else {
+        window.location.href = 'pages/dashboard.html';
+      }
+    }, 800);
+  </script>
+</body>
+</html>

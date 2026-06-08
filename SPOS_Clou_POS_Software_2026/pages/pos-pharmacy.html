@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy POS - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pos.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="pos-terminal">
+        <!-- Products Panel -->
+        <div class="pos-products-panel">
+          <div class="pos-toolbar" style="background:var(--success-dim); border-bottom-color:var(--success)">
+            <div class="pos-search">
+              <i class="fas fa-search" style="color:var(--success)"></i>
+              <input type="text" id="pos-search-input" placeholder="Search medicines by name, generic, or SKU...">
+            </div>
+            <button class="btn btn-success btn-icon" title="Upload Prescription"><i class="fas fa-file-medical"></i></button>
+            <button class="btn btn-success btn-icon" title="View Held Sales"><i class="fas fa-hand-holding-medical"></i></button>
+          </div>
+
+          <!-- Rx Banner if active -->
+          <div class="rx-card m-16" id="rx-banner" style="display:none">
+            <div class="rx-header">
+              <i class="fas fa-file-prescription text-success" style="font-size:1.5rem"></i>
+              <div>
+                <div class="font-bold">Prescription #RX-8842</div>
+                <div class="text-sm text-muted">Dr. A. Perera • 12 Oct 2026</div>
+              </div>
+              <div class="ml-auto">
+                <button class="btn btn-ghost btn-sm text-danger" onclick="clearRx()"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+            <div class="flex gap-8">
+              <span class="rx-badge">Amoxicillin 250mg</span>
+              <span class="rx-badge">Paracetamol 500mg</span>
+            </div>
+          </div>
+
+          <div class="pos-categories" id="pos-categories">
+            <!-- Populated via JS -->
+          </div>
+
+          <div class="pos-products-grid" id="pos-products-grid">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Cart Panel (Same layout as Normal POS) -->
+        <div class="pos-cart-panel" id="pos-cart-panel">
+          <div class="cart-header">
+            <div class="cart-title">
+              <span>Current Sale</span>
+              <span class="badge badge-success" id="invoice-no">PRM-1000</span>
+            </div>
+            <div class="cart-meta">
+              <button class="cart-meta-btn"><i class="fas fa-user-injured"></i> Walk-in Patient</button>
+              <button class="cart-meta-btn" onclick="clearCart()"><i class="fas fa-trash-alt text-danger"></i> Clear</button>
+            </div>
+          </div>
+
+          <div class="cart-items" id="cart-items"></div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal (<span id="item-count">0</span> items)</span>
+              <span id="cart-subtotal">LKR 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label text-success">Discount</span>
+              <span class="text-success" id="cart-discount">- LKR 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Tax (18%)</span>
+              <span id="cart-tax">LKR 0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="cart-total" class="text-success">LKR 0.00</span>
+            </div>
+          </div>
+
+          <div class="pos-payment-section">
+            <div class="payment-methods-row">
+              <button class="payment-method-btn selected" style="--accent-start:var(--success)"><i class="fas fa-money-bill-wave"></i> Cash</button>
+              <button class="payment-method-btn"><i class="fas fa-credit-card"></i> Card</button>
+              <button class="payment-method-btn"><i class="fas fa-shield-alt"></i> Insurance</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-checkout" style="flex:2; background:var(--success); box-shadow:0 4px 24px rgba(46,204,113,0.3)" id="btn-checkout" onclick="alert('Checkout integration pending')">Pay <span id="btn-checkout-amt">LKR 0.00</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    let engine;
+    let currentCat = 'All';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('pos-pharmacy', 'Pharmacy POS');
+      engine = new POSEngine('pharmacy');
+      engine.onCartUpdate = renderCart;
+      
+      renderCategories();
+      renderProducts();
+      renderCart();
+
+      // Demo RX load
+      setTimeout(() => {
+        if(confirm('A patient has submitted an e-prescription. Load it?')) {
+          document.getElementById('rx-banner').style.display = 'block';
+          engine.addItem(POSEngine.PRODUCTS.pharmacy.find(p=>p.id==='MED002'), 10);
+          engine.addItem(POSEngine.PRODUCTS.pharmacy.find(p=>p.id==='MED001'), 20);
+        }
+      }, 1500);
+    });
+
+    function clearRx() { document.getElementById('rx-banner').style.display = 'none'; }
+
+    function renderCategories() {
+      const cats = engine.getCategories();
+      document.getElementById('pos-categories').innerHTML = cats.map(c => `
+        <button class="cat-tab ${c === currentCat ? 'active' : ''}" style="--accent-start:var(--success)" onclick="selectCategory('${c}')">${c}</button>
+      `).join('');
+    }
+
+    function selectCategory(cat) { currentCat = cat; renderCategories(); renderProducts(cat); }
+
+    function renderProducts(cat = currentCat, search = '') {
+      const prods = engine.getProducts(cat, search);
+      document.getElementById('pos-products-grid').innerHTML = prods.map(p => {
+        const rxIcon = p.rx ? `<i class="fas fa-file-prescription text-danger" style="position:absolute;top:6px;left:6px;font-size:0.8rem"></i>` : '';
+        const expStyle = new Date(p.expiry) < new Date(Date.now()+90*24*3600*1000) ? 'color:var(--warning)' : 'color:var(--text-muted)';
+        
+        return `
+        <div class="pos-product-item ${p.stock <= 0 ? 'out-of-stock' : ''}" style="border-color:rgba(46,204,113,0.2)" onclick="${p.stock > 0 ? `addToCart('${p.id}')` : ''}">
+          ${rxIcon}
+          <div class="pos-item-icon">${p.icon}</div>
+          <div class="pos-item-name">${p.name}</div>
+          <div class="pos-item-price text-success">${formatCurrency(p.price)}</div>
+          <div class="text-xs mt-4" style="${expStyle}">Exp: ${p.expiry}</div>
+        </div>
+      `}).join('');
+    }
+
+    function addToCart(id) {
+      const prod = POSEngine.PRODUCTS.pharmacy.find(p => p.id === id);
+      if(prod) {
+        if(prod.rx && document.getElementById('rx-banner').style.display === 'none') {
+          showToast('Warning: This is a prescription-only drug (POM). Verify RX before dispensing.', 'warning');
+        }
+        engine.addItem(prod);
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      document.getElementById('invoice-no').textContent = engine.invoiceNo;
+      
+      if (engine.cart.length === 0) {
+        container.innerHTML = `<div class="cart-empty"><i class="fas fa-pills cart-empty-icon" style="color:var(--success)"></i><div class="cart-empty-text">Cart is empty.</div></div>`;
+        document.getElementById('btn-checkout').disabled = true;
+      } else {
+        container.innerHTML = engine.cart.map(i => `
+          <div class="cart-item" style="border-left:3px solid ${i.rx?'var(--warning)':'var(--success)'}">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${i.name} ${i.rx?'<i class="fas fa-exclamation-circle text-warning text-xs"></i>':''}</div>
+              <div class="cart-item-price">${formatCurrency(i.price)}</div>
+            </div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty - 1})">-</button>
+              <div class="qty-val">${i.qty}</div>
+              <button class="qty-btn" onclick="engine.updateQty('${i.id}', ${i.qty + 1})">+</button>
+            </div>
+            <div class="cart-item-sub text-success">${formatCurrency(i.price * i.qty)}</div>
+            <button class="cart-item-remove" onclick="engine.removeItem('${i.id}')"><i class="fas fa-times"></i></button>
+          </div>
+        `).join('');
+        document.getElementById('btn-checkout').disabled = false;
+      }
+
+      document.getElementById('item-count').textContent = engine.itemCount;
+      document.getElementById('cart-subtotal').textContent = formatCurrency(engine.subtotal);
+      document.getElementById('cart-discount').textContent = `- ${formatCurrency(engine.discountAmount)}`;
+      document.getElementById('cart-tax').textContent = formatCurrency(engine.taxAmount);
+      
+      const totalStr = formatCurrency(engine.total);
+      document.getElementById('cart-total').textContent = totalStr;
+      document.getElementById('btn-checkout-amt').textContent = totalStr;
+    }
+
+    function clearCart() { if(confirm('Clear cart?')) engine.clearCart(); }
+  </script>
+</body>
+</html>

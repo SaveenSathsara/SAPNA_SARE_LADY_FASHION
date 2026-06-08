@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Inventory Control</h1>
+          <p class="page-subtitle">Stock levels, GRN, and adjustments</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="alert('GRN Form')"><i class="fas fa-truck-loading"></i> Receive Goods (GRN)</button>
+          <button class="btn btn-warning" onclick="alert('Stock Adjustment Form')"><i class="fas fa-balance-scale"></i> Adjust Stock</button>
+        </div>
+      </div>
+
+      <div class="grid grid-4 mb-24">
+        <div class="stat-card glass-card stat-card-blue">
+          <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+          <div class="stat-value">4,250</div>
+          <div class="stat-label">Total Items in Stock</div>
+        </div>
+        <div class="stat-card glass-card stat-card-red">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-value">12</div>
+          <div class="stat-label">Low Stock Alerts</div>
+        </div>
+        <div class="stat-card glass-card stat-card-purple">
+          <div class="stat-icon"><i class="fas fa-money-bill-alt"></i></div>
+          <div class="stat-value text-sm mt-8">LKR 1.2M</div>
+          <div class="stat-label">Total Stock Value</div>
+        </div>
+        <div class="stat-card glass-card stat-card-green">
+          <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-value">5</div>
+          <div class="stat-label">Expiring Soon (30d)</div>
+        </div>
+      </div>
+
+      <div class="glass-card p-24">
+        <h3 class="font-bold mb-16">Stock Movements Log</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reference</th>
+              <th>Type</th>
+              <th>Item</th>
+              <th>Qty Change</th>
+              <th>User</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Today, 10:30 AM</td>
+              <td class="font-mono text-sm">GRN-5541</td>
+              <td><span class="badge badge-success">IN (Purchase)</span></td>
+              <td>Mineral Water 1L</td>
+              <td class="text-success font-bold">+50</td>
+              <td>Store Manager</td>
+            </tr>
+            <tr>
+              <td>Today, 09:15 AM</td>
+              <td class="font-mono text-sm">INV-1000</td>
+              <td><span class="badge badge-danger">OUT (Sale)</span></td>
+              <td>Coca Cola 330ml</td>
+              <td class="text-danger font-bold">-2</td>
+              <td>Cashier 1</td>
+            </tr>
+            <tr>
+              <td>Yesterday, 16:45</td>
+              <td class="font-mono text-sm">ADJ-0089</td>
+              <td><span class="badge badge-warning">ADJUSTMENT</span></td>
+              <td>Biscuit Pack</td>
+              <td class="text-warning font-bold">-1</td>
+              <td>Admin</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('inventory', 'Inventory Control');
+    });
+  </script>
+</body>
+</html>

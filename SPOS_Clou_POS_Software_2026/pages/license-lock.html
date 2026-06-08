@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Locked - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-base);
+    }
+    .lock-container {
+      width: 100%;
+      max-width: 500px;
+      padding: 40px;
+      text-align: center;
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+    .lock-icon {
+      font-size: 3rem;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .key-input {
+      text-align: center;
+      font-family: monospace;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+    .status-pending { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(255,206,32,0.3); }
+    .status-declined { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(238,93,80,0.3); }
+  </style>
+</head>
+<body>
+
+  <div class="lock-container animate-fade-in" id="lock-ui">
+    <div class="lock-icon"><i class="fas fa-lock"></i></div>
+    <h1 class="font-bold mb-8 text-primary">System Locked</h1>
+    <p class="text-muted mb-24 text-sm">Please provide your Machine ID headers and enter the License Keys to request admin verification.</p>
+
+    <form id="licenseRequestForm">
+      <div class="form-group mb-16 text-left">
+        <label class="form-label">Machine ID (Header 4)</label>
+        <div class="grid-4">
+          <input type="text" class="form-control key-input" value="SPOS" readonly>
+          <input type="text" class="form-control key-input" value="C829" readonly>
+          <input type="text" class="form-control key-input" value="A41F" readonly>
+          <input type="text" class="form-control key-input" value="990B" readonly>
+        </div>
+      </div>
+      
+      <div class="form-group mb-24 text-left">
+        <label class="form-label">Enter License Keys (4 Blocks)</label>
+        <div class="grid-4">
+          <input type="text" class="form-control key-input" maxlength="4" placeholder="XXXX" id="k1" required>
+          <input type="text" class="form-control key-input" maxlength="4" placeholder="XXXX" id="k2" required>
+          <input type="text" class="form-control key-input" maxlength="4" placeholder="XXXX" id="k3" required>
+          <input type="text" class="form-control key-input" maxlength="4" placeholder="XXXX" id="k4" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-full" style="width:100%; justify-content:center">
+        Verify Admin <i class="fas fa-shield-check ml-8"></i>
+      </button>
+    </form>
+    
+    <div id="status-container" class="hidden">
+      <div class="status-badge" id="status-badge">Waiting for Admin...</div>
+      <p class="text-sm text-muted mt-16">Your request has been sent to the Admin app. Please wait for approval.</p>
+      <button class="btn btn-secondary mt-16 btn-sm" onclick="checkStatus()">Refresh Status</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="../assets/js/app.js"></script>
+  <script>
+    // Simulate Hardware ID
+    const hwid = "SPOS-C829-A41F-990B";
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkStatus();
+      
+      // Auto advance inputs
+      const inputs = [document.getElementById('k1'), document.getElementById('k2'), document.getElementById('k3'), document.getElementById('k4')];
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length === 4 && index < 3) {
+            inputs[index + 1].focus();
+          }
+        });
+      });
+    });
+
+    document.getElementById('licenseRequestForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const k1 = document.getElementById('k1').value.toUpperCase();
+      const k2 = document.getElementById('k2').value.toUpperCase();
+      const k3 = document.getElementById('k3').value.toUpperCase();
+      const k4 = document.getElementById('k4').value.toUpperCase();
+      
+      const request = {
+        hwid,
+        keys: `${k1}-${k2}-${k3}-${k4}`,
+        status: 'PENDING',
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem('spos_license_request', JSON.stringify(request));
+      showToast('Request sent to Admin!', 'success');
+      checkStatus();
+    });
+
+    function checkStatus() {
+      const req = JSON.parse(localStorage.getItem('spos_license_request'));
+      if (req) {
+        if (req.status === 'APPROVED') {
+          showToast('License Approved! Unlocking...', 'success');
+          localStorage.setItem('spos_license_state', 'APPROVED');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+        } else if (req.status === 'DECLINED') {
+          document.getElementById('licenseRequestForm').classList.add('hidden');
+          document.getElementById('status-container').classList.remove('hidden');
+          const badge = document.getElementById('status-badge');
+          badge.className = 'status-badge status-declined';
+          badge.innerHTML = '<i class="fas fa-times-circle"></i> Request Declined';
+        } else {
+          // PENDING
+          document.getElementById('licenseRequestForm').classList.add('hidden');
+          document.getElementById('status-container').classList.remove('hidden');
+          const badge = document.getElementById('status-badge');
+          badge.className = 'status-badge status-pending';
+          badge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pending Admin Approval';
+        }
+      }
+    }
+    
+    // Poll every 3 seconds for approval
+    setInterval(checkStatus, 3000);
+  </script>
+</body>
+</html>

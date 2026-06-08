@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <!-- Sidebar and Topbar injected by JS -->
+    
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard Overview</h1>
+          <p class="page-subtitle">Welcome back, <span id="dash-user">User</span>. Here's what's happening today.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="window.location.href='reports.html'"><i class="fas fa-download"></i> Export Report</button>
+          <button class="btn btn-primary" onclick="openAllowedPOS()"><i class="fas fa-store"></i> Open POS</button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card glass-card stat-card-purple">
+          <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+          <div class="stat-value" id="stat-sales">0</div>
+          <div class="stat-label">Today's Sales Count</div>
+          <div class="stat-change text-success"><i class="fas fa-arrow-up"></i> 12% vs yesterday</div>
+        </div>
+        
+        <div class="stat-card glass-card stat-card-teal">
+          <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="stat-value" id="stat-revenue">LKR 0</div>
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-change text-success"><i class="fas fa-arrow-up"></i> 8.5% vs yesterday</div>
+        </div>
+
+        <div class="stat-card glass-card stat-card-orange">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-value">124</div>
+          <div class="stat-label">Total Customers</div>
+          <div class="stat-change text-success"><i class="fas fa-arrow-up"></i> 3 new today</div>
+        </div>
+
+        <div class="stat-card glass-card stat-card-red">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-value">5</div>
+          <div class="stat-label">Low Stock Items</div>
+          <div class="stat-change text-danger"><i class="fas fa-arrow-down"></i> Needs attention</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-24">
+        <!-- Revenue Chart -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">Revenue Overview</div>
+              <div class="chart-subtitle">Last 7 Days Performance</div>
+            </div>
+            <select class="form-control" style="width:120px; padding:6px 10px; font-size:0.8rem">
+              <option>Last 7 Days</option>
+              <option>This Month</option>
+              <option>This Year</option>
+            </select>
+          </div>
+          <canvas id="revenueChart"></canvas>
+        </div>
+
+        <!-- Sales by Module -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">Sales by Category</div>
+              <div class="chart-subtitle">Distribution across departments</div>
+            </div>
+          </div>
+          <div class="flex-center" style="height:200px">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <!-- Recent Transactions -->
+        <div class="glass-card p-24">
+          <div class="flex-between mb-20">
+            <h3 class="font-bold">Recent Transactions</h3>
+            <a href="sales-history.html" class="text-accent text-sm font-semibold">View All</a>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Time</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tx-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="glass-card p-24">
+          <div class="flex-between mb-20">
+            <h3 class="font-bold">System Activity</h3>
+            <button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i></button>
+          </div>
+          <div class="activity-feed" id="activity-feed">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/license.js"></script>
+  <script src="../assets/js/charts.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    function openAllowedPOS() {
+      if (window.LicenseManager) {
+        const mods = ['normal', 'pharmacy', 'restaurant', 'hospital', 'pawning', 'distribution'];
+        const allowed = mods.filter(m => LicenseManager.isModuleAllowed(m));
+        if (allowed.length === 1) {
+          window.location.href = `pos-${allowed[0]}.html`;
+          return;
+        }
+      }
+      window.location.href = 'pos-selector.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('dashboard', 'Dashboard');
+      
+      document.getElementById('dash-user').textContent = SPOS.user?.name || 'User';
+
+      // Load Stats
+      const daily = POSEngine.getDailySummary();
+      document.getElementById('stat-sales').textContent = daily.count;
+      document.getElementById('stat-revenue').textContent = formatCurrency(daily.revenue);
+
+      // Initialize Charts
+      setTimeout(() => {
+        SPOSCharts.drawLine('revenueChart', {
+          labels: SPOSCharts.dayLabels(7),
+          datasets: [{ data: SPOSCharts.generateDailyData(7, 40000), color: '#6C63FF' }]
+        });
+
+        SPOSCharts.drawDoughnut('categoryChart', {
+          labels: ['Grocery', 'Beverages', 'Snacks', 'Pharmacy'],
+          values: [45, 25, 15, 15],
+          colors: ['#6C63FF', '#4ECDC4', '#F39C12', '#2ECC71']
+        });
+      }, 300);
+
+      // Populate Recent Transactions
+      const sales = POSEngine.getSales(null, 5);
+      const txBody = document.getElementById('recent-tx-body');
+      if (sales.length === 0) {
+        txBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No recent transactions</td></tr>`;
+      } else {
+        txBody.innerHTML = sales.map(s => `
+          <tr>
+            <td class="font-semibold">${s.invoiceNo}</td>
+            <td class="text-muted text-sm">${new Date(s.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+            <td class="font-bold">${formatCurrency(s.total)}</td>
+            <td><span class="badge badge-success badge-dot">Completed</span></td>
+          </tr>
+        `).join('');
+      }
+
+      // Populate Activity Feed
+      const logs = getActivityLogs().slice(0, 5);
+      const actBody = document.getElementById('activity-feed');
+      if (logs.length === 0) {
+        actBody.innerHTML = `<div class="text-center text-muted py-4">No activity yet</div>`;
+      } else {
+        const getIcon = (type) => {
+          if (type === 'login' || type === 'logout') return { icon: 'fa-user', color: 'var(--info)', bg: 'var(--info-dim)' };
+          if (type === 'sale') return { icon: 'fa-shopping-cart', color: 'var(--success)', bg: 'var(--success-dim)' };
+          if (type === 'license') return { icon: 'fa-certificate', color: 'var(--warning)', bg: 'var(--warning-dim)' };
+          return { icon: 'fa-cog', color: 'var(--text-secondary)', bg: 'var(--bg-card)' };
+        };
+
+        actBody.innerHTML = logs.map(l => {
+          const s = getIcon(l.type);
+          return `
+          <div class="activity-item">
+            <div class="activity-icon" style="background:${s.bg}; color:${s.color}">
+              <i class="fas ${s.icon}"></i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">${l.action}</div>
+              <div class="activity-time">${new Date(l.timestamp).toLocaleString()} • by ${l.user}</div>
+            </div>
+          </div>
+        `}).join('');
+      }
+    });
+  </script>
+</body>
+</html>

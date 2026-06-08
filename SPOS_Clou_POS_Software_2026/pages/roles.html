@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roles & Permissions - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Roles & Permissions</h1>
+          <p class="page-subtitle">Configure access control levels for system users</p>
+        </div>
+      </div>
+
+      <div class="grid grid-4 mb-24">
+        <!-- Roles List -->
+        <div class="glass-card p-16" style="grid-column: span 1">
+          <h3 class="font-bold mb-16 px-8">System Roles</h3>
+          <div class="flex-col gap-4">
+            <button class="pos-type-btn current"><i class="fas fa-shield-alt pos-type-icon"></i> Administrator</button>
+            <button class="pos-type-btn"><i class="fas fa-user-tie pos-type-icon"></i> Manager</button>
+            <button class="pos-type-btn"><i class="fas fa-cash-register pos-type-icon"></i> Cashier</button>
+            <button class="pos-type-btn"><i class="fas fa-pills pos-type-icon"></i> Pharmacist</button>
+          </div>
+          <button class="btn btn-secondary w-full mt-16 text-sm" style="width:100%"><i class="fas fa-plus"></i> Create Custom Role</button>
+        </div>
+
+        <!-- Permissions Editor -->
+        <div class="glass-card p-24" style="grid-column: span 3">
+          <div class="flex-between mb-20 border-bottom" style="padding-bottom:16px; border-color:var(--border)">
+            <div>
+              <h2 class="font-bold text-accent">Manager Role</h2>
+              <p class="text-sm text-muted mt-4">Full access to operations, but restricted from system settings.</p>
+            </div>
+            <button class="btn btn-primary" onclick="showToast('Permissions saved!', 'success')">Save Changes</button>
+          </div>
+
+          <h4 class="font-bold mb-12 mt-16 text-muted">Point of Sale Access</h4>
+          <div class="permission-grid mb-24">
+            <div class="permission-item">
+              <span><i class="fas fa-cash-register mr-8"></i> Normal POS</span>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-pills mr-8"></i> Pharmacy POS</span>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-utensils mr-8"></i> Restaurant POS</span>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-hospital mr-8"></i> Hospital POS</span>
+              <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <h4 class="font-bold mb-12 mt-16 text-muted">Backoffice Access</h4>
+          <div class="permission-grid">
+            <div class="permission-item">
+              <span><i class="fas fa-boxes mr-8"></i> Inventory Control</span>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-chart-bar mr-8"></i> View Reports</span>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-users mr-8"></i> User Management</span>
+              <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="permission-item">
+              <span><i class="fas fa-cog mr-8"></i> System Settings</span>
+              <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('roles', 'Roles & Permissions');
+    });
+  </script>
+</body>
+</html>

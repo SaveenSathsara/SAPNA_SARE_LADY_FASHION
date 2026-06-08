@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pawning POS - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pos.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="pos-terminal">
+        <!-- Input Panel -->
+        <div class="pos-products-panel p-24" style="overflow-y:auto">
+          <h2 class="font-bold mb-16 gradient-text" style="--accent-start:var(--warning)">New Pledge Assessment</h2>
+          
+          <div class="grid grid-2 mb-20">
+            <div class="form-group">
+              <label class="form-label">Customer NIC</label>
+              <input type="text" class="form-control" placeholder="Enter NIC" value="853401234V">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Customer Name</label>
+              <input type="text" class="form-control" placeholder="Name" value="Sunil Silva">
+            </div>
+          </div>
+
+          <div class="glass-card p-20 mb-20">
+            <h3 class="font-bold mb-16 text-warning"><i class="fas fa-ring"></i> Item Details</h3>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label class="form-label">Article Type</label>
+                <select class="form-control">
+                  <option>Gold Chain 22K</option>
+                  <option>Gold Ring 24K</option>
+                  <option>Gold Bangle 22K</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gross Weight (g)</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="weight" value="15.5" step="0.1" onchange="calcLoan()">
+                  <i class="fas fa-weight input-icon-right text-muted" style="right:12px; left:auto; position:absolute; top:50%; transform:translateY(-50%)"></i>
+                </div>
+              </div>
+            </div>
+            <div class="form-group mt-12">
+              <label class="form-label">Description</label>
+              <input type="text" class="form-control" placeholder="e.g., 22K gold chain with pendant">
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="glass-card p-20 text-center">
+              <div class="text-sm text-muted font-bold uppercase tracking-wide mb-8">Today's Gold Rate (22K)</div>
+              <div class="text-warning font-bold" style="font-size:1.8rem">LKR 185,000</div>
+              <div class="text-sm text-muted mt-4">per 8g (Pawan)</div>
+            </div>
+            
+            <div class="loan-calc-display" style="border-color:var(--warning)">
+              <div class="loan-label text-warning font-bold uppercase tracking-wide mb-4">Max Loan Amount</div>
+              <div class="loan-amount text-warning" id="max-loan">LKR 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Panel (Pledge Summary) -->
+        <div class="pos-cart-panel" id="pos-cart-panel">
+          <div class="cart-header">
+            <div class="cart-title">
+              <span>Pledge Ticket</span>
+              <span class="badge badge-warning">PWN-2041</span>
+            </div>
+          </div>
+
+          <div class="cart-items p-16" style="gap:16px">
+            <div class="form-group">
+              <label class="form-label">Approved Loan Amount (LKR)</label>
+              <input type="number" class="form-control form-control-lg" id="approved-loan" style="font-size:1.5rem; font-weight:bold; color:var(--warning)" value="300000">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Interest Rate</label>
+              <select class="form-control form-control-lg">
+                <option>2.5% per month</option>
+                <option>3.0% per month</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Duration</label>
+              <select class="form-control form-control-lg">
+                <option>12 Months</option>
+                <option>6 Months</option>
+              </select>
+            </div>
+            
+            <div class="glass-card p-16 mt-auto" style="background:rgba(243,156,18,0.05); border-color:rgba(243,156,18,0.2)">
+              <div class="flex-between mb-8">
+                <span class="text-muted text-sm">Document Fee</span>
+                <span class="font-bold">LKR 500.00</span>
+              </div>
+              <div class="flex-between">
+                <span class="text-warning font-bold uppercase">Net Payout to Customer</span>
+                <span class="text-warning font-bold" style="font-size:1.2rem">LKR 299,500.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pos-payment-section">
+            <button class="btn-checkout" style="background:var(--warning); color:#111; box-shadow:0 4px 24px rgba(243,156,18,0.3)" onclick="alert('Pledge Ticket Printed!')">Print Ticket & Issue Cash <i class="fas fa-print ml-8"></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('pos-pawning', 'Pawning POS');
+      calcLoan();
+    });
+
+    function calcLoan() {
+      const weight = parseFloat(document.getElementById('weight').value || 0);
+      const ratePerGram = 185000 / 8; // 22K rate per gram
+      const maxVal = weight * ratePerGram * 0.85; // 85% LTV
+      document.getElementById('max-loan').textContent = formatCurrency(maxVal);
+      document.getElementById('approved-loan').value = Math.floor(maxVal/1000)*1000;
+    }
+  </script>
+</body>
+</html>

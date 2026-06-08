@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">System Settings</h1>
+          <p class="page-subtitle">Configure business details, receipts, and integrations</p>
+        </div>
+        <button class="btn btn-primary" onclick="showToast('Settings Saved', 'success')"><i class="fas fa-save"></i> Save Configuration</button>
+      </div>
+
+      <div class="grid grid-2 mb-24">
+        <div class="glass-card p-24">
+          <h3 class="font-bold mb-16"><i class="fas fa-building text-accent"></i> Business Details</h3>
+          <div class="form-group mb-16">
+            <label class="form-label">Business Name</label>
+            <input type="text" class="form-control" value="SPOS Cloud POS 2026">
+          </div>
+          <div class="form-group mb-16">
+            <label class="form-label">Address Line</label>
+            <input type="text" class="form-control" value="123 Main Street, Colombo 01">
+          </div>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="text" class="form-control" value="011-2345678">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tax / VAT Number</label>
+              <input type="text" class="form-control" value="VAT-9988776655">
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-24">
+          <h3 class="font-bold mb-16"><i class="fas fa-print text-accent"></i> Receipt Configuration</h3>
+          <div class="form-group mb-16">
+            <label class="form-label">Receipt Footer Message</label>
+            <input type="text" class="form-control" value="Thank you for your business!">
+          </div>
+          <div class="form-group mb-16">
+            <label class="form-label">Printer Type</label>
+            <select class="form-control">
+              <option>Thermal 80mm</option>
+              <option>Thermal 58mm</option>
+              <option>A4 Laser/Inkjet</option>
+            </select>
+          </div>
+          <div class="flex-between mt-20" style="padding:16px; background:var(--bg-surface); border-radius:var(--radius-md)">
+            <div>
+              <div class="font-bold">Auto-Print Receipt</div>
+              <div class="text-xs text-muted">Print immediately after checkout</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card p-24 mb-24">
+        <h3 class="font-bold mb-16 text-success"><i class="fas fa-database"></i> Database Backup & Restore</h3>
+        <div class="grid grid-2">
+          <div>
+            <div class="flex-between mb-16" style="padding:16px; background:var(--bg-surface); border-radius:var(--radius-md)">
+              <div>
+                <div class="font-bold">Enable Auto Backup</div>
+                <div class="text-xs text-muted">Automatically save database copies</div>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group mb-16">
+              <label class="form-label">Auto Backup Location</label>
+              <div class="input-group">
+                <i class="fas fa-folder-open input-icon"></i>
+                <input type="text" class="form-control" value="D:/SPOS_Backups/" placeholder="e.g. D:/Backups/">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Backup Frequency</label>
+              <select class="form-control">
+                <option>Daily at End of Day</option>
+                <option>Weekly</option>
+                <option>Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex-col" style="justify-content:center; padding:24px; align-items:center; border-left:1px solid var(--border)">
+            <button class="btn btn-success mb-16" style="width:200px" onclick="showToast('Database Backup saved to D:/SPOS_Backups/backup_latest.json', 'success')"><i class="fas fa-download"></i> Backup Now</button>
+            <button class="btn btn-secondary" style="width:200px" onclick="alert('Select a backup file to restore.')"><i class="fas fa-upload"></i> Restore Backup</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card p-24">
+        <h3 class="font-bold mb-16 text-danger"><i class="fas fa-shield-alt"></i> Danger Zone</h3>
+        <p class="text-sm text-muted mb-16">These actions cannot be undone. Please proceed with caution.</p>
+        <div class="flex gap-12">
+          <button class="btn btn-danger" onclick="if(confirm('Clear all local data?')) { localStorage.clear(); window.location.reload(); }">Reset All System Data</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Settings Auth Overlay -->
+  <div class="modal-overlay active" id="modal-settings-auth" style="z-index:99999; background:var(--bg-base)">
+    <div class="modal" style="text-align:center">
+      <div class="login-logo" style="margin:0 auto 20px; width:64px; height:64px; border-radius:12px; background:var(--accent-grad); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.8rem"><i class="fas fa-lock"></i></div>
+      <h3 class="font-bold mb-8">Settings Authentication</h3>
+      <p class="text-sm text-muted mb-24">Please enter official credentials to access system settings.</p>
+      
+      <form id="settingsAuthForm" style="text-align:left">
+        <div class="form-group mb-16">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="s-user" required>
+        </div>
+        <div class="form-group mb-24">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="s-pass" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="width:100%; justify-content:center">Unlock Settings <i class="fas fa-unlock ml-8"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('settings', 'Settings');
+      
+      // Settings Auth Logic
+      document.getElementById('settingsAuthForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const u = document.getElementById('s-user').value;
+        const p = document.getElementById('s-pass').value;
+        
+        if (u === 'spos official' && p === '@Saveen2014518') {
+          document.getElementById('modal-settings-auth').classList.remove('active');
+          showToast('Settings Unlocked', 'success');
+        } else {
+          showToast('Invalid credentials. Access Denied.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products - SPOS Cloud POS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+
+  <div class="app-layout" id="app-layout">
+    <div id="page-content" class="hidden">
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Products Directory</h1>
+          <p class="page-subtitle">Manage items, pricing, and categories</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary"><i class="fas fa-file-import"></i> Import</button>
+          <button class="btn btn-primary" onclick="openModal('modal-add-product')"><i class="fas fa-plus"></i> Add Product</button>
+        </div>
+      </div>
+
+      <div class="glass-card p-24 mb-24">
+        <div class="filter-bar">
+          <div class="input-group" style="flex:2">
+            <i class="fas fa-search input-icon"></i>
+            <input type="text" class="form-control" placeholder="Search by name, SKU or barcode...">
+          </div>
+          <select class="form-control" style="flex:1">
+            <option>All Categories</option>
+            <option>Beverages</option>
+            <option>Grocery</option>
+            <option>Pharmacy</option>
+          </select>
+          <select class="form-control" style="flex:1">
+            <option>Active Status</option>
+            <option>Out of Stock</option>
+          </select>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code / SKU</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price (LKR)</th>
+                <th>Stock</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add Product Modal -->
+  <div class="modal-overlay" id="modal-add-product">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Product</h3>
+        <button class="modal-close" onclick="closeModal('modal-add-product')"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="addProductForm">
+        <div class="grid grid-2 mb-16">
+          <div class="form-group">
+            <label class="form-label">Product Name</label>
+            <input type="text" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">SKU / Barcode</label>
+            <input type="text" class="form-control" required>
+          </div>
+        </div>
+        <div class="grid grid-2 mb-16">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-control">
+              <option>Grocery</option>
+              <option>Beverages</option>
+              <option>Pharmacy</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier</label>
+            <select class="form-control">
+              <option>Default Supplier</option>
+              <option>Ceylon Beverages PLC</option>
+              <option>Hemas Pharmaceuticals</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-2 mb-16">
+          <div class="form-group">
+            <label class="form-label">Cost Price (LKR)</label>
+            <input type="number" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selling Price (LKR)</label>
+            <input type="number" class="form-control" required>
+          </div>
+        </div>
+        <div class="grid grid-3 mb-16">
+          <div class="form-group">
+            <label class="form-label">Opening Stock</label>
+            <input type="number" class="form-control" value="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reorder Level</label>
+            <input type="number" class="form-control" value="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry Date</label>
+            <input type="date" class="form-control">
+          </div>
+        </div>
+        <div class="form-group mb-24">
+          <label class="form-label">Product Description</label>
+          <textarea class="form-control" rows="2" placeholder="Optional details..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-product')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/pos-engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage('products', 'Products Directory');
+      renderProductsTable();
+      
+      document.getElementById('addProductForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        showToast('Product added successfully', 'success');
+        closeModal('modal-add-product');
+      });
+    });
+
+    function renderProductsTable() {
+      const prods = POSEngine.PRODUCTS.normal; // Demo using normal module products
+      document.getElementById('products-table-body').innerHTML = prods.map(p => `
+        <tr>
+          <td class="font-mono text-sm">${p.sku}</td>
+          <td class="font-bold">
+            <div class="flex" style="gap:8px; align-items:center">
+              <span>${p.icon}</span> <span>${p.name}</span>
+            </div>
+          </td>
+          <td><span class="badge badge-muted">${p.category}</span></td>
+          <td class="font-bold text-accent">${formatCurrency(p.price)}</td>
+          <td>
+            <span class="status-${p.stock>10?'active':'pending'} font-bold">${p.stock}</span>
+          </td>
+          <td class="text-right">
+            <button class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-ghost btn-sm text-danger"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
